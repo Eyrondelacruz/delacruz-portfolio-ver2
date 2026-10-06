@@ -14,6 +14,8 @@ import {
 
 gsap.registerPlugin(ScrollTrigger)
 
+const CONTACT_EMAIL = 'aaronkarldelacruz5@gmail.com'
+
 function ScrollTypewriter({ text, className = '' }: { text: string; className?: string }) {
   const triggerRef = useRef<HTMLSpanElement | null>(null)
   const [displayText, setDisplayText] = useState(text.slice(0, 1))
@@ -110,20 +112,31 @@ function ContactForm() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    const name = String(formData.get('name') ?? '').trim()
+    const email = String(formData.get('email') ?? '').trim()
+    const message = String(formData.get('message') ?? '').trim()
+
+    if (!name || !email || !message) {
+      setStatus('Please complete all fields before sending your message.')
+      return
+    }
+
     setIsSubmitting(true)
     setStatus('')
 
-    const form = event.currentTarget
-    const formData = new FormData(form)
     const payload = {
-      name: String(formData.get('name') ?? ''),
-      email: String(formData.get('email') ?? ''),
-      needs: String(formData.get('needs') ?? ''),
-      _subject: `Portfolio inquiry from ${String(formData.get('name') ?? '')}`,
+      name,
+      email,
+      message,
+      _replyto: email,
+      _subject: 'New Portfolio Client Inquiry',
+      _captcha: 'false',
     }
 
     try {
-      const response = await fetch('https://formsubmit.co/ajax/aaronkarldelacruz5@gmail.com', {
+      const response = await fetch(`https://formsubmit.co/ajax/${CONTACT_EMAIL}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,13 +151,9 @@ function ContactForm() {
       }
 
       form.reset()
-      setStatus('Message sent. Thank you for getting in touch!')
-    } catch (error) {
-      setStatus(
-        error instanceof Error
-          ? error.message
-          : 'The message could not be sent. Please try again.',
-      )
+      setStatus("Message sent successfully! I'll get back to you soon.")
+    } catch {
+      setStatus('Something went wrong. Please try again or contact me directly.')
     } finally {
       setIsSubmitting(false)
     }
@@ -155,7 +164,12 @@ function ContactForm() {
       <p className="contact-form__intro">
         Tell me what you need and I&apos;ll get back to you at the email you provide.
       </p>
-      <form className="contact-form" onSubmit={handleSubmit}>
+      <form
+        className="contact-form"
+        action={`https://formsubmit.co/${CONTACT_EMAIL}`}
+        method="POST"
+        onSubmit={handleSubmit}
+      >
         <label>
           Your name
           <input name="name" type="text" autoComplete="name" maxLength={120} required />
@@ -173,7 +187,7 @@ function ContactForm() {
         <label className="contact-form__message">
           What do you need?
           <textarea
-            name="needs"
+            name="message"
             rows={5}
             maxLength={5000}
             placeholder="Tell me about your project or how I can help..."
@@ -716,8 +730,8 @@ function App() {
             </h2>
             <div className="contact__actions">
               <ContactForm />
-              <a className="contact__email" href="mailto:aaronkarldelacruz5@gmail.com">
-                aaronkarldelacruz5@gmail.com
+              <a className="contact__email" href={`mailto:${CONTACT_EMAIL}`}>
+                {CONTACT_EMAIL}
               </a>
               <nav className="contact__socials" aria-label="Social profiles">
                 <a className="contact__social-link" href="https://www.facebook.com/eyronkarldelacruz/" target="_blank" rel="noreferrer">
